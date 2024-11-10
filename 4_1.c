@@ -1,7 +1,6 @@
 // Implement the C program in which main program accepts an array. Main program uses the FORK 
 // system call to create a new process called a child process. Child process sorts an array. The child 
 // process uses EXECVE system call to load new program which display array in reverse order. 
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -31,15 +30,7 @@ void displayArray(int arr[], int n) {
     printf("\n");
 }
 
-// Function to display the array in reverse order
-void displayReverseArray(int arr[], int n) {
-    printf("Array in Reverse Order: ");
-    for (int i = n - 1; i >= 0; i--) {
-        printf("%d ", arr[i]);
-    }
-    printf("\n");
-}
-
+// Main function
 int main() {
     int n;
 
@@ -47,7 +38,9 @@ int main() {
     printf("Enter number of elements: ");
     scanf("%d", &n);
 
-    int arr[n];
+    // Define a static array to hold elements
+    int arr[100];  // Static array size (sufficient for up to 100 elements)
+
     // Input array elements
     printf("Enter the elements of the array: ");
     for (int i = 0; i < n; i++) {
@@ -60,17 +53,27 @@ int main() {
     if (pid < 0) {
         printf("Fork failed!\n");
         return 1;
-    } else if (pid == 0) {
+    } 
+    else if (pid == 0) {
         // Child process
         printf("Child Process: Sorting the array.\n");
         bubbleSort(arr, n);
         printf("Sorted Array by Child: ");
         displayArray(arr, n);
 
-        // Display the sorted array in reverse order
-        displayReverseArray(arr, n);
+        // Prepare for execve call
+        // Convert the array to a string (to pass it to another program)
+        // Create an array of arguments for execve
+        char *args[3];
+        args[0] = "./reverse";  // Path to the program (the reverse program)
+        args[1] = NULL; // Terminate the argument list with NULL
 
-        exit(0);
+        // Execute the new program using execve
+        execve(args[0], args, NULL);
+
+        // If execve fails, exit with an error
+        perror("Execve failed");
+        exit(1);
     } else {
         // Parent process
         wait(NULL);  // Wait for the child to complete
@@ -79,10 +82,3 @@ int main() {
 
     return 0;
 }
-
-// Enter number of elements: 5
-// Enter the elements of the array: 23 12 9 34 2
-// Child Process: Sorting the array.
-// Sorted Array by Child: 2 9 12 23 34 
-// Array in Reverse Order: 34 23 12 9 2 
-// Parent Process: Child has completed.
